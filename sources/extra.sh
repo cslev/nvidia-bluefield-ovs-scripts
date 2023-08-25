@@ -100,7 +100,7 @@ function check_retval ()
   if [ $retval -ne 0 ]
   then
     c_print "BRed" "[FAIL]"
-    if [$quit -eq 1 ]
+    if [ $quit -eq 1 ]
     then
       exit $retval
     fi
