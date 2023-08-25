@@ -89,10 +89,21 @@ function c_print ()
 function check_retval ()
 {
   retval=$1
+  do_not_quit_on_error=$2
+  if [ -z "$do_not_quit_on_error" ]
+  then
+    quit=1 # newline at the end
+  else
+    quit=0
+  fi
+
   if [ $retval -ne 0 ]
   then
     c_print "BRed" "[FAIL]"
-    exit $retval
+    if [$quit -eq 1 ]
+    then
+      exit $retval
+    fi
   else
     c_print "BGreen" "[DONE]"
   fi

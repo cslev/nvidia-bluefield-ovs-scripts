@@ -45,12 +45,12 @@ sudo ovs-vsctl --if-exists del-br ovsbr1
 sudo ovs-vsctl --if-exists del-br ovsbr2
 sudo ovs-vsctl --if-exists del-br ovs_dpdk_br0
 retval=$?
-check_retval $retval
+check_retval $retval 1
 
 c_print "Bold" "Removing default DP in kernel..." 1
 sudo ovs-dpctl del-dp system@ovs-system
 retval=$?
-check_retval $retval
+check_retval $retval 1
 
 
 
@@ -58,13 +58,13 @@ c_print "Bold" "Killing the whole process tree of OVS" 1
 sudo pkill ovsdb-server
 sudo pkill ovs-vswitchd
 retval=$?
-check_retval $retval
+check_retval $retval 1
 
 
 c_print "Bold" "Removing OVS kernel module" 1
 sudo rmmod openvswitch 2>/dev/null
 retval=$?
-check_retval $retval
+check_retval $retval 1
 
 c_print "Bold" "After all these, I find the following processes still running that might be related to OvS. Please, check!"
 ps aux |grep ovs|grep -v "grep --color=auto" |grep -v "stop_ovs.sh"|grep -v "grep ovs"|grep -v "nano"
