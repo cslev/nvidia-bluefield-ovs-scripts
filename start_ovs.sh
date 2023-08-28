@@ -121,10 +121,10 @@ then
   check_retval $retval
 
   c_print "Bold" "Add virtual port pf0hpf to ovsbr1" 1
-  sudo ovs-vsctl add-port $DBR pf1hpf
+  sudo ovs-vsctl add-port $DBR2 pf1hpf
   retval=$?
   check_retval $retval
-  
+
 
   c_print "Bold" "Deleting NORMAL flow rules (if there were any) from the bridges..." 1
   sudo ovs-ofctl del-flows $DBR
@@ -132,9 +132,29 @@ then
   retval=$?
   check_retval $retval
 
-  c_print "Bold" "Adding ARP flood flow rules to the bridges..." 1
-  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR
-  sudo ovs-ofctl del-flows $DBR2  
+  c_print "Bold" "Adding ARP flood flow rules to the bridges..." 
+  sudo ovs-ofctl -OOpenFlow12 add-flow $DBR arp,actions=FLOOD
+  sudo ovs-ofctl -OOpenFlow12 add-flow $DBR2 arp,actions=FLOOD
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding IP forward rule $DBR: ip,in_port=pf0hpf,ip_dst=10.0.0.2,ip_src=10.0.0.1,actions=output:p0..."  1  
+  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=pf0hpf,ip_dst=10.0.0.2,ip_src=10.0.0.1,actions=output:p0
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding IP forward rule to $DBR: ip,in_port=p0,ip_dst=10.0.0.1,ip_src=10.0.0.2,actions=output:pf0hpf..."  1  
+  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p0,ip_dst=10.0.0.1,ip_src=10.0.0.2,actions=output:pf0hpf
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding IP forward rule $DBR2: ip,in_port=pf1hpf,ip_dst=10.10.10.2,ip_src=10.10.10.1,actions=output:p1..."  1  
+  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=pf1hpf,ip_dst=10.10.10.2,ip_src=10.10.10.1,actions=output:p1
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding IP forward rule to $DBR2: ip,in_port=p1,ip_dst=10.10.10.1,ip_src=10.10.10.2,actions=output:pf1hpf..."  1  
+  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=p1,ip_dst=10.10.10.1,ip_src=10.10.10.2,actions=output:pf1hpf
   retval=$?
   check_retval $retval
 
