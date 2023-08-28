@@ -37,7 +37,7 @@ then
   DPDK=0
  	c_print "Yellow" "Starting OVS without DPDK..."
   c_print "Bold" "Adding OVS kernel module" 1
-  sudo modprove openvswitch 2>&1
+  sudo modprobe openvswitch 2>&1
   retval=$?
   check_retval $retval
 else
