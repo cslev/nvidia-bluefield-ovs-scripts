@@ -32,6 +32,13 @@ while getopts "h?a:" opt
  done
 
 
+DB_SOCK=/var/run/openvswitch
+DB_SOCK="${DB_SOCK}/db.sock"
+
+DBR="ovsbr1"
+DBR2="ovsbr2"
+DPDK_BR="ovs_dpdk_br0"
+
 # if [ -z $ARG1 ]
 #  then
 #  	c_print "Red" "Undefined arguments!"
@@ -41,10 +48,11 @@ while getopts "h?a:" opt
 
 
 c_print "Bold" "Removing 'ovsbr1', 'ovsbr2', and 'ovs_dpdk_br0' bridges if they exist..." 1
-sudo ovs-vsctl --if-exists del-br ovsbr1
-sudo ovs-vsctl --if-exists del-br ovsbr2
-sudo ovs-vsctl --if-exists del-br ovs_dpdk_br0
+sudo ovs-vsctl --if-exists del-br $DBR 
+sudo ovs-vsctl --if-exists del-br $DBR2 
+sudo ovs-vsctl --if-exists del-br $DPDK_BR
 retval=$?
+c_print "Red" "Retval: ${retval}"
 check_retval $retval 1
 
 # c_print "Bold" "Removing default DP in kernel..." 1
