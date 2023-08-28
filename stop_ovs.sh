@@ -52,7 +52,7 @@ sudo ovs-vsctl --if-exists del-br $DBR
 sudo ovs-vsctl --if-exists del-br $DBR2 
 sudo ovs-vsctl --if-exists del-br $DPDK_BR
 retval=$?
-c_print "Red" "Retval: ${retval}"
+# c_print "Red" "Retval: ${retval}"
 check_retval $retval 1
 
 # c_print "Bold" "Removing default DP in kernel..." 1
