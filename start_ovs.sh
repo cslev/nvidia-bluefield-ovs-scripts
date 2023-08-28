@@ -51,6 +51,11 @@ fi
 DB_SOCK=/var/run/openvswitch
 DB_SOCK="${DB_SOCK}/db.sock"
 
+DBR="ovsbr1"
+DBR2="ovsbr2"
+DPDK_BR="ovs_dpdk_br0"
+
+
 c_print "Bold" "Deleting preconfigured OvS data (/etc/openvswitch/conf.db)..." 1
 sudo rm -rf /etc/openvswitch/conf.db > /dev/null 2>&1
 c_print "BGreen" "[DONE]"
@@ -75,6 +80,11 @@ check_retval $retval
 ####################
 if [ $DPDK -eq 0 ]
 then
+  c_print "Bold" "Setting other_config:dpdk-init=false" 1
+  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=false
+  retval=$?
+  check_retval $retval
+
   c_print "Bold" "Initializing..." 1
   sudo ovs-vsctl --no-wait init
   retval=$?
@@ -84,6 +94,51 @@ then
   sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach
   retval=$?
   check_retval $retval
+
+  c_print "Bold" "Adding ovsbr1 bridge..." 1
+  sudo ovs-vsctl add-br $DBR
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Add physical port p0 to ovsbr1" 1
+  sudo ovs-vsctl add-port $DBR p0
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Add virtual port pf0hpf to ovsbr1" 1
+  sudo ovs-vsctl add-port $DBR pf0hpf
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding ovsbr2 bridge..." 1
+  sudo ovs-vsctl add-br $DBR2
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Add physical port p0 to ovsbr1" 1
+  sudo ovs-vsctl add-port $DBR2 p1
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Add virtual port pf0hpf to ovsbr1" 1
+  sudo ovs-vsctl add-port $DBR pf1hpf
+  retval=$?
+  check_retval $retval
+  
+
+  c_print "Bold" "Deleting NORMAL flow rules (if there were any) from the bridges..." 1
+  sudo ovs-ofctl del-flows $DBR
+  sudo ovs-ofctl del-flows $DBR2  
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding ARP flood flow rules to the bridges..." 1
+  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR
+  sudo ovs-ofctl del-flows $DBR2  
+  retval=$?
+  check_retval $retval
+
+
 
 #####################
 ##### OVS DPDK ######
