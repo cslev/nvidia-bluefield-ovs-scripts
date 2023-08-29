@@ -185,7 +185,83 @@ then
 ##### OVS DPDK ######
 #####################
 else
-  echo ""
+  c_print "Bold" "Enabling 2M hugepages..." 1
+  sudo echo 4096 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Mounting hugepages..." 1
+  sudo mountpoint -q /dev/hugepages || sudo mount -t hugetlbfs nodev /dev/hugepages
+  retval=$?
+  check_retval $retval
+
+
+  c_print "Bold" "Setting other_config:dpdk-init=true" 1
+  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Setting dpdk lcore mask=0xff" 1
+  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-lcore-mask=0xff
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Setting dpdk socket mem 4096" 1
+  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="4096,0"
+
+  if [ $HW_OFFLOAD -eq 0 ]
+  then
+    c_print "Bold" "Setting other_config:hw-offload=false" 1
+    sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:hw-offload=false
+    retval=$?
+    check_retval $retval
+  else
+    c_print "Bold" "Setting other_config:hw-offload=true" 1
+    sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:hw-offload=true
+    retval=$?
+    check_retval $retval
+  fi
+
+
+  c_print "Bold" "Starting vswitchd..." 
+  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Creating DPDK netdev bridge..." 1
+  sudo ovs-vsctl add-br $DPDK_BR -- set bridge $DPDK_BR datapath_type=netdev
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding DPDK ports as other_config params..." 1
+  sudo ovs-vsctl set Open_vSwitch . other_config:dpdk-extra="-a 0000:03:00.0,representor=[0,65535] -a 0000:03:00.1,representor=[0,65535]"
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding 0000:03:00.0 as port dpdk0 to ${DPDK_BR}..." 1
+  sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk0 -- set Interface dpdk0 type=dpdk -- set Interface dpdk0 options:dpdk-devargs=0000:03:00.0
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding 0000:03:00.0's virtual function (VF) as port dpdk1 to ${DPDK_BR}..." 1
+  sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk1 -- set Interface dpdk1 type=dpdk -- set Interface dpdk1 options:dpdk-devargs=0000:03:00.0,representor=[0,65535]
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding 0000:03:00.1 as port dpdk2 to ${DPDK_BR}..." 1
+  sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk2 -- set Interface dpdk2 type=dpdk -- set Interface dpdk2 options:dpdk-devargs=0000:03:00.1
+  retval=$?
+  check_retval $retval
+
+  c_print "Bold" "Adding 0000:03:00.1's virtual function (VF) as port dpdk3 to ${DPDK_BR}..." 1
+  sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk3 -- set Interface dpdk3 type=dpdk -- set Interface dpdk3 options:dpdk-devargs=0000:03:00.1,representor=[0,65535]
+  retval=$?
+  check_retval $retval
+
+
+  
+
+
 fi
 
 echo ""
