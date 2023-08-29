@@ -186,7 +186,7 @@ then
 #####################
 else
   c_print "Bold" "Enabling 2M hugepages..." 1
-  sudo echo 4096 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+  sudo echo 8192 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
   retval=$?
   check_retval $retval
 
