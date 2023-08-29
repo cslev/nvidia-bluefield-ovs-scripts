@@ -26,7 +26,7 @@ while getopts "h?do" opt
  		DPDK=1
  		;;
   o)
-    OFFLOAD=1
+    HW_OFFLOAD=1
     ;;
  	*)
  		show_help
