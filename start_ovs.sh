@@ -13,20 +13,20 @@ function show_help ()
  	exit $1
  }
 
-DPDK=""
-HW_OFFLOAD=""
+DPDK=0
+HW_OFFLOAD=0
 
-while getopts "h?d:" opt
+while getopts "h?do" opt
  do
  	case "$opt" in
  	h|\?)
  		show_help
  		;;
  	d)
- 		DPDK=$OPTARG
+ 		DPDK=1
  		;;
   o)
-    OFFLOAD=$OPTARG
+    OFFLOAD=1
     ;;
  	*)
  		show_help
@@ -35,25 +35,21 @@ while getopts "h?d:" opt
  done
 
 
-if [ -z $HW_OFFLOAD ]
+if [ $HW_OFFLOAD -eq 0 ]
 then
-  HW_OFFLOAD=0
   c_print "Bold" "HW_OFFLOAD: DISABLED"
 else
-  HW_OFFLOAD=1
   c_print "Bold" "HW_OFFLOAD: ENABLED"
 fi
 
-if [ -z $DPDK ]
+if [ $DPDK -eq 0 ]
 then
-  DPDK=0
  	c_print "Yellow" "Starting OVS without DPDK..."
   c_print "Bold" "Adding OVS kernel module" 1
   sudo modprobe openvswitch 2>&1
   retval=$?
   check_retval $retval
 else
-  DPDK=1
   c_print "Yellow" "Starting OVS WITH DPDK..."
 fi
 
