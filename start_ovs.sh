@@ -87,6 +87,11 @@ check_retval $retval
 ### OVS KERNEL #####
 ####################
 
+c_print "Bold" "Initializing..." 1
+sudo ovs-vsctl --no-wait --log-file=/var/run/openvswitch/cslev-ovs-vsctl.log init 
+retval=$?
+check_retval $retval
+
 
 if [ $DPDK -eq 0 ]
 then
@@ -107,11 +112,6 @@ then
     retval=$?
     check_retval $retval
   fi
-
-  c_print "Bold" "Initializing..." 1
-  sudo ovs-vsctl --no-wait --log-file=/var/run/openvswitch/cslev-ovs-vsctl.log init 
-  retval=$?
-  check_retval $retval
 
   c_print "Bold" "Starting vswitchd..." 
   sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid  --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log --detach
@@ -206,7 +206,7 @@ else
 
 
   c_print "Bold" "Setting other_config:dpdk-init=true" 1
-  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log
+  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true 
   retval=$?
   check_retval $retval
 
