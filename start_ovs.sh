@@ -256,7 +256,7 @@ else
   check_retval $retval
 
   c_print "Bold" "Adding 0000:03:00.0's virtual function (VF) as port dpdk1 to ${DPDK_BR}..." 1
-  sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk1 -- set Interface dpdk1 type=dpdk -- set Interface dpdk1 options:dpdk-devargs=0000:03:00.0,representor=[0,65535]
+  sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk1 -- set Interface dpdk1 type=dpdk -- set Interface dpdk1 options:dpdk-devargs=0000:03:00.0,representor=[65535]
   retval=$?
   check_retval $retval
 
