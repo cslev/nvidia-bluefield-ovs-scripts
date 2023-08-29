@@ -9,11 +9,12 @@ function show_help ()
  	c_print "Green" "This script stops Open vSwitch processes completely! Instead of a simple /etc/init.d/openvswitch-switch stop, this script systematically stop each individual subprocesses and removes OvS bridges and datapath components."
  	c_print "Bold" "Example: sudo ./stop_ovs.sh "
  	c_print "Bold" "\t-d: with DPDK (Default: NO)."
+  c_print "Bold" "\t-o: enable HW OFFLOAD (Default: disable)."
  	exit $1
  }
 
 DPDK=""
-
+HW_OFFLOAD=""
 
 while getopts "h?d:" opt
  do
@@ -24,13 +25,24 @@ while getopts "h?d:" opt
  	d)
  		DPDK=$OPTARG
  		;;
- 
+  o)
+    OFFLOAD=$OPTARG
+    ;;
  	*)
  		show_help
  		;;
  	esac
  done
 
+
+if [ -z $HW_OFFLOAD ]
+then
+  HW_OFFLOAD=0
+  c_print "Bold" "HW_OFFLOAD: DISABLED"
+else
+  HW_OFFLOAD=1
+  c_print "Bold" "HW_OFFLOAD: ENABLED"
+fi
 
 if [ -z $DPDK ]
 then
@@ -85,6 +97,20 @@ then
   retval=$?
   check_retval $retval
 
+  if [ $HW_OFFLOAD -eq 0 ]
+  then
+    c_print "Bold" "Setting other_config:hw-offload=false" 1
+    sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:hw-offload=false
+    retval=$?
+    check_retval $retval
+  else
+    c_print "Bold" "Setting other_config:hw-offload=true" 1
+    sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:hw-offload=true
+    retval=$?
+    check_retval $retval
+  fi
+
+
   c_print "Bold" "Initializing..." 1
   sudo ovs-vsctl --no-wait init
   retval=$?
@@ -124,7 +150,6 @@ then
   sudo ovs-vsctl add-port $DBR2 pf1hpf
   retval=$?
   check_retval $retval
-
 
   c_print "Bold" "Deleting NORMAL flow rules (if there were any) from the bridges..." 1
   sudo ovs-ofctl del-flows $DBR
