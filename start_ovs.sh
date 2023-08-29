@@ -185,15 +185,23 @@ then
 ##### OVS DPDK ######
 #####################
 else
-  c_print "Bold" "Enabling 2M hugepages..." 1
-  sudo echo 8192 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+  c_print "Yellow" "Verify your hugepage settings..." 
+  sudo mount | grep huge
   retval=$?
   check_retval $retval
+  
+  # c_print "Bold" "Enabling 2M hugepages..." 1
+  # #sudo echo 8192 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+  # sudo echo 11280 | sudo tee /sys/kernel/mm/hugepages/hugepages-204
+  # retval=$?
+  # check_retval $retval
 
-  c_print "Bold" "Mounting hugepages..." 1
-  sudo mountpoint -q /dev/hugepages || sudo mount -t hugetlbfs nodev /dev/hugepages
-  retval=$?
-  check_retval $retval
+  # c_print "Bold" "Mounting hugepages..." 1
+  # sudo mkdir /mnt/huge -p
+  # mount -t hugetlbfs nodev /mnt/huge
+  # #sudo mountpoint -q /dev/hugepages || sudo mount -t hugetlbfs nodev /dev/hugepages
+  # retval=$?
+  # check_retval $retval
 
 
   c_print "Bold" "Setting other_config:dpdk-init=true" 1

@@ -74,8 +74,17 @@ sudo rmmod openvswitch 2>/dev/null
 retval=$?
 check_retval $retval 1
 
+# c_print "Bold" "Removing hugepages (if any)" 1
+# sudo rm -rf /mnt/huge/*
+# sudo umount /mnt/huge
+# sudo echo 0 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+# retval=$?
+# check_retval $retval 1
+
+
 c_print "Bold" "\n\nAfter all these, I find the following processes still running that might be related to OvS. Please, check!"
 ps aux |grep ovs|grep -v "grep --color=auto" |grep -v "stop_ovs.sh"|grep -v "grep ovs"|grep -v "nano"
+
 
 echo -e "\n"
 
