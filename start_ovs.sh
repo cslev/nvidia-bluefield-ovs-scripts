@@ -86,6 +86,11 @@ check_retval $retval
 ####################
 ### OVS KERNEL #####
 ####################
+c_print "Bold" "Initializing..." 1
+sudo ovs-vsctl --no-wait init --log-file=/var/run/openvswitch/cslev-ovs-vsctl.log
+retval=$?
+check_retval $retval
+
 if [ $DPDK -eq 0 ]
 then
   c_print "Bold" "Setting other_config:dpdk-init=false" 1
@@ -107,13 +112,8 @@ then
   fi
 
 
-  c_print "Bold" "Initializing..." 1
-  sudo ovs-vsctl --no-wait init --log-file=/var/run/openvswitch/cslev-ovs-vsctl.log
-  retval=$?
-  check_retval $retval
-
   c_print "Bold" "Starting vswitchd..." 
-  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log
+  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid  --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log --detach
   retval=$?
   check_retval $retval
 
@@ -205,7 +205,7 @@ else
 
 
   c_print "Bold" "Setting other_config:dpdk-init=true" 1
-  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log
   retval=$?
   check_retval $retval
 
@@ -235,7 +235,7 @@ else
 
 
   c_print "Bold" "Starting vswitchd..." 
-  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach
+  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log --detach
   retval=$?
   check_retval $retval
 
@@ -254,10 +254,10 @@ else
   retval=$?
   check_retval $retval
 
-  # c_print "Bold" "Adding 0000:03:00.0's virtual function (VF) as port dpdk1 to ${DPDK_BR}..." 1
-  # sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk1 -- set Interface dpdk1 type=dpdk -- set Interface dpdk1 options:dpdk-devargs=0000:03:00.0,representor=[0,65535]
-  # retval=$?
-  # check_retval $retval
+  c_print "Bold" "Adding 0000:03:00.0's virtual function (VF) as port dpdk1 to ${DPDK_BR}..." 1
+  sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk1 -- set Interface dpdk1 type=dpdk -- set Interface dpdk1 options:dpdk-devargs=0000:03:00.0,representor=[0,65535]
+  retval=$?
+  check_retval $retval
 
   # c_print "Bold" "Adding 0000:03:00.1 as port dpdk2 to ${DPDK_BR}..." 1
   # sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk2 -- set Interface dpdk2 type=dpdk -- set Interface dpdk2 options:dpdk-devargs=0000:03:00.1
