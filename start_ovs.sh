@@ -79,7 +79,7 @@ sudo mkdir -p /var/run/openvswitch
 
 
 c_print "Bold" "Starting ovsdb-server..." 1
-sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --pidfile=/run/openvswitch/ovsdb-server.pid --detach
+sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --pidfile=/run/openvswitch/ovsdb-server.pid --log-file=/var/run/openvswitch/cslev-ovsdb-server.log --detach
 retval=$?
 check_retval $retval
 
@@ -108,12 +108,12 @@ then
 
 
   c_print "Bold" "Initializing..." 1
-  sudo ovs-vsctl --no-wait init
+  sudo ovs-vsctl --no-wait init --log-file=/var/run/openvswitch/cslev-ovs-vsctl.log
   retval=$?
   check_retval $retval
 
   c_print "Bold" "Starting vswitchd..." 
-  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach
+  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log
   retval=$?
   check_retval $retval
 
@@ -189,7 +189,7 @@ else
   sudo mount | grep huge
   retval=$?
   check_retval $retval
-  
+
   # c_print "Bold" "Enabling 2M hugepages..." 1
   # #sudo echo 8192 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
   # sudo echo 11280 | sudo tee /sys/kernel/mm/hugepages/hugepages-204
