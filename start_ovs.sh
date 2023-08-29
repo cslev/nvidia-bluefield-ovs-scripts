@@ -246,7 +246,9 @@ else
   check_retval $retval
 
   c_print "Bold" "Adding DPDK ports as other_config params..." 1
-  sudo ovs-vsctl set Open_vSwitch . other_config:dpdk-extra="-a 0000:03:00.0,representor=[0,65535] -a 0000:03:00.1,representor=[0,65535]"
+  # sudo ovs-vsctl set Open_vSwitch . other_config:dpdk-extra="-a 0000:03:00.0,representor=[0,65535] -a 0000:03:00.1,representor=[0,65535]"
+  sudo ovs-vsctl set Open_vSwitch . other_config:dpdk-extra="-a 0000:03:00.0,representor=[0,65535]"
+
   retval=$?
   check_retval $retval
 
@@ -255,10 +257,10 @@ else
   retval=$?
   check_retval $retval
 
-  c_print "Bold" "Adding 0000:03:00.0's virtual function (VF) as port dpdk1 to ${DPDK_BR}..." 1
-  sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk1 -- set Interface dpdk1 type=dpdk -- set Interface dpdk1 options:dpdk-devargs=0000:03:00.0,representor=[65535]
-  retval=$?
-  check_retval $retval
+  # c_print "Bold" "Adding 0000:03:00.0's virtual function (VF) as port dpdk1 to ${DPDK_BR}..." 1
+  # sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk1 -- set Interface dpdk1 type=dpdk -- set Interface dpdk1 options:dpdk-devargs=0000:03:00.0,representor=[65535]
+  # retval=$?
+  # check_retval $retval
 
   # c_print "Bold" "Adding 0000:03:00.1 as port dpdk2 to ${DPDK_BR}..." 1
   # sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk2 -- set Interface dpdk2 type=dpdk -- set Interface dpdk2 options:dpdk-devargs=0000:03:00.1
