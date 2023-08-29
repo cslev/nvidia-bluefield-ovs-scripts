@@ -207,7 +207,10 @@ else
   check_retval $retval
 
   c_print "Bold" "Setting dpdk socket mem 4096" 1
-  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="4096,0"
+  sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="4096"
+  retval=$?
+  check_retval $retval
+
 
   if [ $HW_OFFLOAD -eq 0 ]
   then
