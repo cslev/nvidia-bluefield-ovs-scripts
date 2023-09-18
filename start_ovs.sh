@@ -54,7 +54,9 @@ else
 fi
 
 
-
+LOG_OVS_DB=/var/log/openvswitch/cslev-ovsdb-server.log
+LOG_OVS_VSCTL=/var/log/openvswitch/cslev-ovs-vsctl.log
+LOG_OVS_VSWITCHD=/var/log/openvswitch/cslev-ovs-vswitchd.log
 
 DB_SOCK=/var/run/openvswitch
 DB_SOCK="${DB_SOCK}/db.sock"
@@ -84,7 +86,7 @@ sudo mkdir -p /var/log/openvswitch
 
 c_print "Bold" "Starting ovsdb-server..." 1
 # sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --pidfile=/var/run/openvswitch/ovsdb-server.pid --log-file=/var/run/openvswitch/cslev-ovsdb-server.log --detach
-sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --detach
+sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --log-file=$LOG_OVS_DB --detach
 retval=$?
 check_retval $retval
 
@@ -93,8 +95,7 @@ check_retval $retval
 ####################
 
 c_print "Bold" "Initializing..." 1
-# sudo ovs-vsctl --no-wait --log-file=/var/run/openvswitch/cslev-ovs-vsctl.log init 
-sudo ovs-vsctl --no-wait  init 
+sudo ovs-vsctl --no-wait --log-file=$LOG_OVS_VSCTL init 
 
 retval=$?
 check_retval $retval
@@ -121,8 +122,8 @@ then
   fi
 
   c_print "Bold" "Starting vswitchd..." 
-  # sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid  --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log --detach
-  sudo ovs-vswitchd unix:$DB_SOCK --detach
+  # sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid  --log-file=$LOG_OVS_VSWITCHD --detach
+  sudo ovs-vswitchd unix:$DB_SOCK --log-file=$LOG_OVS_VSWITCHD --detach
   retval=$?  
   check_retval $retval
 
@@ -245,8 +246,8 @@ else
 
 
   c_print "Bold" "Starting vswitchd..." 
-#  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log --detach
-  sudo ovs-vswitchd unix:$DB_SOCK  --detach
+#  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --log-file=/var/run/openvswitch/ovs-vswitchd.log --detach
+  sudo ovs-vswitchd unix:$DB_SOCK --log-file=$LOG_OVS_VSWITCHD --detach
 
   retval=$?
   check_retval $retval
@@ -268,10 +269,10 @@ else
   retval=$?
   check_retval $retval
 
-  # c_print "Bold" "Adding 0000:03:00.0's virtual function (VF) as port dpdk1 to ${DPDK_BR}..." 1
-  # sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk1 -- set Interface dpdk1 type=dpdk -- set Interface dpdk1 options:dpdk-devargs=0000:03:00.0,representor=[65535]
-  # retval=$?
-  # check_retval $retval
+  c_print "Bold" "Adding 0000:03:00.0's virtual function (VF) as port dpdk1 to ${DPDK_BR}..." 1
+  sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk1 -- set Interface dpdk1 type=dpdk -- set Interface dpdk1 options:dpdk-devargs=0000:03:00.0,representor=[65535]
+  retval=$?
+  check_retval $retval
 
   # c_print "Bold" "Adding 0000:03:00.1 as port dpdk2 to ${DPDK_BR}..." 1
   # sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk2 -- set Interface dpdk2 type=dpdk -- set Interface dpdk2 options:dpdk-devargs=0000:03:00.1
