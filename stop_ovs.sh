@@ -93,6 +93,8 @@ check_retval $retval 1
 # check_retval $retval 1
 
 sudo rm -rf /var/run/openvswitch
+sudo rm -rf /var/log/openvswitch
+
 
 c_print "Bold" "\n\nAfter all these, I find the following processes still running that might be related to OvS. Please, check!"
 ps aux |grep ovs|grep -v "grep --color=auto" |grep -v "stop_ovs.sh"|grep -v "grep ovs"|grep -v "nano"

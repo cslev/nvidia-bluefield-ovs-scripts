@@ -76,7 +76,10 @@ retval=$?
 check_retval $retval
 
 sudo rm -rf /var/run/openvswitch
+sudo rm -rf /var/log/openvswitch
 sudo mkdir -p /var/run/openvswitch
+sudo mkdir -p /var/log/openvswitch
+
 
 
 c_print "Bold" "Starting ovsdb-server..." 1
