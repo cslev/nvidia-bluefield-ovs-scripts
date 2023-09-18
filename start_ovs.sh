@@ -187,7 +187,7 @@ then
 #####################
 else
   c_print "Yellow" "Verify your hugepage settings..." 
-  for HUGEPAGE in $(sudo mount |grep hugetlb|awk '{print $3}'))
+  for HUGEPAGE in $(sudo mount |grep hugetlb|awk '{print $3}')
   do
     umount $HUGEPAGE
   done 
