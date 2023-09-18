@@ -6,7 +6,7 @@
  
 function show_help () 
  { 
- 	c_print "Green" "This script stops Open vSwitch processes completely! Instead of a simple /etc/init.d/openvswitch-switch stop, this script systematically stop each individual subprocesses and removes OvS bridges and datapath components."
+ 	c_print "Green" "This script stops Open vSwitch processes completely! Instead of a simple /etc/init.d/openvswitch-switch stop, this script systematically stop each individual subprocess and removes OvS bridges and datapath components."
  	c_print "Bold" "Example: sudo ./stop_ovs.sh "
  	#c_print "Bold" "\t-a <ARG1>: set ARG1 here (Default: ???)."
  	exit $1
