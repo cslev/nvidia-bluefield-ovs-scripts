@@ -6,8 +6,8 @@
  
 function show_help () 
  { 
- 	c_print "Green" "This script stops Open vSwitch processes completely! Instead of a simple /etc/init.d/openvswitch-switch stop, this script systematically stop each individual subprocesses and removes OvS bridges and datapath components."
- 	c_print "Bold" "Example: sudo ./stop_ovs.sh "
+ 	c_print "Green" "This script starts Open vSwitch processes manually! Instead of a simple /etc/init.d/openvswitch-switch start, this script systematically start each individual subprocess and creates OvS bridges and datapath components."
+ 	c_print "Bold" "Example: sudo ./start_ovs.sh "
  	c_print "Bold" "\t-d: with DPDK (Default: NO)."
   c_print "Bold" "\t-o: enable HW OFFLOAD (Default: disable)."
  	exit $1
@@ -187,22 +187,23 @@ then
 #####################
 else
   c_print "Yellow" "Verify your hugepage settings..." 
-  sudo mount | grep huge
-  retval=$?
-  check_retval $retval
+  for HUGEPAGE in $(sudo mount |grep hugetlb|awk '{print $3}'))
+  do
+    umount $HUGEPAGE
+  done 
 
   # c_print "Bold" "Enabling 2M hugepages..." 1
   # #sudo echo 8192 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-  # sudo echo 11280 | sudo tee /sys/kernel/mm/hugepages/hugepages-204
-  # retval=$?
-  # check_retval $retval
+  sudo echo 11280 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+  retval=$?
+  check_retval $retval
 
-  # c_print "Bold" "Mounting hugepages..." 1
-  # sudo mkdir /mnt/huge -p
-  # mount -t hugetlbfs nodev /mnt/huge
+  c_print "Bold" "Mounting hugepages..." 1
+  sudo mkdir /mnt/huge -p
+  mount -t hugetlbfs nodev /mnt/huge
   # #sudo mountpoint -q /dev/hugepages || sudo mount -t hugetlbfs nodev /dev/hugepages
-  # retval=$?
-  # check_retval $retval
+  retval=$?
+  check_retval $retval
 
 
   c_print "Bold" "Setting other_config:dpdk-init=true" 1
