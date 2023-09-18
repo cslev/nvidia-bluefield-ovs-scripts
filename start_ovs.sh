@@ -75,11 +75,13 @@ sudo ovsdb-tool create /etc/openvswitch/conf.db  /usr/share/openvswitch/vswitch.
 retval=$?
 check_retval $retval
 
+sudo rm -rf /var/run/openvswitch
 sudo mkdir -p /var/run/openvswitch
 
 
 c_print "Bold" "Starting ovsdb-server..." 1
-sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --pidfile=/run/openvswitch/ovsdb-server.pid --log-file=/var/run/openvswitch/cslev-ovsdb-server.log --detach
+# sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --pidfile=/var/run/openvswitch/ovsdb-server.pid --log-file=/var/run/openvswitch/cslev-ovsdb-server.log --detach
+sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --detach
 retval=$?
 check_retval $retval
 
@@ -88,7 +90,9 @@ check_retval $retval
 ####################
 
 c_print "Bold" "Initializing..." 1
-sudo ovs-vsctl --no-wait --log-file=/var/run/openvswitch/cslev-ovs-vsctl.log init 
+# sudo ovs-vsctl --no-wait --log-file=/var/run/openvswitch/cslev-ovs-vsctl.log init 
+sudo ovs-vsctl --no-wait  init 
+
 retval=$?
 check_retval $retval
 
@@ -114,8 +118,9 @@ then
   fi
 
   c_print "Bold" "Starting vswitchd..." 
-  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid  --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log --detach
-  retval=$?
+  # sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid  --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log --detach
+  sudo ovs-vswitchd unix:$DB_SOCK --detach
+  retval=$?  
   check_retval $retval
 
   c_print "Bold" "Adding ovsbr1 bridge..." 1
@@ -237,7 +242,9 @@ else
 
 
   c_print "Bold" "Starting vswitchd..." 
-  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log --detach
+#  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --log-file=/var/run/openvswitch/cslev-ovs-vswitchd.log --detach
+  sudo ovs-vswitchd unix:$DB_SOCK  --detach
+
   retval=$?
   check_retval $retval
 
