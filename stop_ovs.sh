@@ -39,6 +39,8 @@ DBR="ovsbr1"
 DBR2="ovsbr2"
 DPDK_BR="ovs_dpdk_br0"
 
+
+c_print "Bold" "Checking if OVS is running..."
 sudo ps aux |grep ovs|grep -v grep
 retval=$?
 if [ $retval -ne 0 ]
