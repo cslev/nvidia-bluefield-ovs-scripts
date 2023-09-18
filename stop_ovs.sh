@@ -39,6 +39,15 @@ DBR="ovsbr1"
 DBR2="ovsbr2"
 DPDK_BR="ovs_dpdk_br0"
 
+sudo ps aux |grep ovs|grep -v grep
+retval=$?
+if [ $retval -ne 0 ]
+then
+	c_print "Yellow" "OVS is not running, nothing to do..."
+	c_print "None" "Exiting..."
+	exit 0
+fi
+
 # if [ -z $ARG1 ]
 #  then
 #  	c_print "Red" "Undefined arguments!"
