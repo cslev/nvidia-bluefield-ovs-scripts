@@ -41,7 +41,7 @@ DPDK_BR="ovs_dpdk_br0"
 
 
 c_print "Bold" "Checking if OVS is running..."
-sudo ps aux |grep ovs|grep -v grep
+sudo ps aux |grep ovs|grep -v grep | grep -v stop_ovs
 retval=$?
 if [ $retval -ne 0 ]
 then
