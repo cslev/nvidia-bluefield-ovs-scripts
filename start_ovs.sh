@@ -69,13 +69,18 @@ DPDK_BR="ovs_dpdk_br0"
 
 VSWITCH_SCHEMA_PATH_OPTION_1=/usr/share/openvswitch/vswitch.ovsschema
 VSWITCH_SCHEMA_PATH_OPTION_2=/usr/local/share/openvswitch/vswitch.ovsschema
+CONF_DB_PATH=""
 #check which path is right for vswitchd.schema
 if [ -f $VSWITCH_SCHEMA_PATH_OPTION_1 ]
 then
+  #this is the case when OvS is installed from repository
   VSWITCH_SCHEMA=$VSWITCH_SCHEMA_PATH_OPTION_1
+  CONF_DB_PATH="/etc/openvswitch/conf.db"
 elif [ -f $VSWITCH_SCHEMA_PATH_OPTION_2 ]
 then
+  #this is the case when OvS compiled from source
   VSWITCH_SCHEMA=$VSWITCH_SCHEMA_PATH_OPTION_2
+  CONF_DB_PATH="/usr/local/etc/openvswitch/conf.db"
 else
   c_print "Red" "vswitch.schema file not found..."
   exit
@@ -85,20 +90,20 @@ fi
 
 
 c_print "Bold" "Deleting preconfigured OvS data (/etc/openvswitch/conf.db)..." 1
-sudo rm -rf /etc/openvswitch/conf.db > /dev/null 2>&1
+sudo rm -rf $CONF_DB_PATH > /dev/null 2>&1
 c_print "BGreen" "[DONE]"
 
 
-sudo mkdir -p /etc/openvswitch/
+sudo mkdir -p $(dirname $CONF_DB_PATH)
 c_print "Bold" "Creating ovs database structure from template..." 1
-sudo ovsdb-tool create /etc/openvswitch/conf.db  $VSWITCH_SCHEMA
+sudo ovsdb-tool create $CONF_DB_PATH $VSWITCH_SCHEMA
 retval=$?
 check_retval $retval
 
-sudo rm -rf /var/run/openvswitch
-sudo rm -rf /var/log/openvswitch
-sudo mkdir -p /var/run/openvswitch
-sudo mkdir -p /var/log/openvswitch
+sudo rm -rf $(dirname $DB_SOCK)
+sudo rm -rf $(dirname $LOG_OVS_DB)
+sudo mkdir -p $(dirname $DB_SOCK)
+sudo mkdir -p $(dirname $LOG_OVS_DB)
 
 
 
