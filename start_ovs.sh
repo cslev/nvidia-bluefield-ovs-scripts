@@ -60,27 +60,30 @@ LOG_OVS_DB=/var/log/openvswitch/cslev-ovsdb-server.log
 LOG_OVS_VSCTL=/var/log/openvswitch/cslev-ovs-vsctl.log
 LOG_OVS_VSWITCHD=/var/log/openvswitch/cslev-ovs-vswitchd.log
 
-DB_SOCK=/var/run/openvswitch
-DB_SOCK="${DB_SOCK}/db.sock"
+
 
 DBR="ovsbr1"
 DBR2="ovsbr2"
 DPDK_BR="ovs_dpdk_br0"
 
+# these following two paths decide many other paths
 VSWITCH_SCHEMA_PATH_OPTION_1=/usr/share/openvswitch/vswitch.ovsschema
 VSWITCH_SCHEMA_PATH_OPTION_2=/usr/local/share/openvswitch/vswitch.ovsschema
-CONF_DB_PATH=""
 #check which path is right for vswitchd.schema
 if [ -f $VSWITCH_SCHEMA_PATH_OPTION_1 ]
 then
   #this is the case when OvS is installed from repository
   VSWITCH_SCHEMA=$VSWITCH_SCHEMA_PATH_OPTION_1
   CONF_DB_PATH="/etc/openvswitch/conf.db"
+  DB_SOCK=/var/run/openvswitch
+  DB_SOCK="${DB_SOCK}/db.sock"
 elif [ -f $VSWITCH_SCHEMA_PATH_OPTION_2 ]
 then
   #this is the case when OvS compiled from source
   VSWITCH_SCHEMA=$VSWITCH_SCHEMA_PATH_OPTION_2
   CONF_DB_PATH="/usr/local/etc/openvswitch/conf.db"
+  DB_SOCK=/usr/local/var/run/openvswitch
+  DB_SOCK="${DB_SOCK}/db.sock"
 else
   c_print "Red" "vswitch.schema file not found..."
   exit
