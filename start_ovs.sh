@@ -34,24 +34,26 @@ while getopts "h?do" opt
  	esac
  done
 
-
+c_print "None" "+========= YOUR SETTINGS ===========+"
 if [ $HW_OFFLOAD -eq 0 ]
 then
-  c_print "Bold" "HW_OFFLOAD: DISABLED"
+  c_print "Bold" "|  HW_OFFLOAD: DISABLED"
 else
-  c_print "Bold" "HW_OFFLOAD: ENABLED"
+  c_print "Bold" "|  HW_OFFLOAD: ENABLED"
 fi
+c_print "None" "+-----------------------------------+"
 
 if [ $DPDK -eq 0 ]
 then
- 	c_print "Yellow" "Starting OVS without DPDK..."
-  c_print "Bold" "Adding OVS kernel module" 1
+ 	c_print "Bold" "|  DPDK: NO"
+  # c_print "Bold" "Adding OVS kernel module" 1
   sudo modprobe openvswitch 2>&1
   retval=$?
   check_retval $retval
 else
-  c_print "Yellow" "Starting OVS WITH DPDK..."
+  c_print "Bold" "| DPDK: YES"
 fi
+c_print "None" "+===================================+"
 
 
 LOG_OVS_DB=/var/log/openvswitch/cslev-ovsdb-server.log
@@ -71,7 +73,7 @@ VSWITCH_SCHEMA_PATH_OPTION_2=/usr/local/share/openvswitch/vswitch.ovsschema
 if [ -f $VSWITCH_SCHEMA_PATH_OPTION_1 ]
 then
   VSWITCH_SCHEMA=$VSWITCH_SCHEMA_PATH_OPTION_1
-elif [-f $VSWITCH_SCHEMA_PATH_OPTION_2 ]
+elif [ -f $VSWITCH_SCHEMA_PATH_OPTION_2 ]
 then
   VSWITCH_SCHEMA=$VSWITCH_SCHEMA_PATH_OPTION_2
 else
