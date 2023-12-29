@@ -10,13 +10,15 @@ function show_help ()
  	c_print "Bold" "Example: sudo ./start_ovs.sh "
  	c_print "Bold" "\t-d: with DPDK (Default: NO)."
   c_print "Bold" "\t-o: enable HW OFFLOAD (Default: disable)."
+  c_print "Bold" "\t-t: use two bridges (ovsbr1 + ovsbr2) (Default: False (ovsbr1 only))."
  	exit $1
  }
 
 DPDK=0
 HW_OFFLOAD=0
+TWO_BRIDGES=0
 
-while getopts "h?do" opt
+while getopts "h?dot" opt
  do
  	case "$opt" in
  	h|\?)
@@ -27,6 +29,9 @@ while getopts "h?do" opt
  		;;
   o)
     HW_OFFLOAD=1
+    ;;
+  t)
+    TWO_BRIDGES=1
     ;;
  	*)
  		show_help
@@ -168,52 +173,87 @@ then
   retval=$?
   check_retval $retval
 
-  c_print "Bold" "Adding ovsbr2 bridge..." 1
-  sudo ovs-vsctl add-br $DBR2
-  retval=$?
-  check_retval $retval
+  if [ $TWO_BRIDGES -eq 1 ]
+  then
+    c_print "Bold" "Adding second ovsbr2 bridge..." 1
+    sudo ovs-vsctl add-br $DBR2
+    retval=$?
+    check_retval $retval
+ 
+    c_print "Bold" "Add physical port p1 to ovsbr2" 1
+    sudo ovs-vsctl add-port $DBR2 p1
+    retval=$?
+    check_retval $retval
 
-  c_print "Bold" "Add physical port p0 to ovsbr1" 1
-  sudo ovs-vsctl add-port $DBR2 p1
-  retval=$?
-  check_retval $retval
+    c_print "Bold" "Add virtual port pf1hpf to ovsbr2" 1
+    sudo ovs-vsctl add-port $DBR2 pf1hpf
+    retval=$?
+    check_retval $retval
+  else
+    c_print "Bold" "Add physical port p1 to ovsbr1" 1
+    sudo ovs-vsctl add-port $DBR p1
+    retval=$?
+    check_retval $retval
 
-  c_print "Bold" "Add virtual port pf0hpf to ovsbr1" 1
-  sudo ovs-vsctl add-port $DBR2 pf1hpf
-  retval=$?
-  check_retval $retval
+    c_print "Bold" "Add virtual port pf1hpf to ovsbr1" 1
+    sudo ovs-vsctl add-port $DBR pf1hpf
+    retval=$?
+    check_retval $retval
+  fi
 
   c_print "Bold" "Deleting NORMAL flow rules (if there were any) from the bridges..." 1
   sudo ovs-ofctl del-flows $DBR
-  sudo ovs-ofctl del-flows $DBR2  
-  retval=$?
-  check_retval $retval
+
+  if [ $TWO_BRIDGES -eq 1 ]
+  then
+    sudo ovs-ofctl del-flows $DBR2  
+    retval=$?
+    check_retval $retval
+  fi
 
   c_print "Bold" "Adding ARP flood flow rules to the bridges..." 
   sudo ovs-ofctl -OOpenFlow12 add-flow $DBR arp,actions=FLOOD
-  sudo ovs-ofctl -OOpenFlow12 add-flow $DBR2 arp,actions=FLOOD
+  if [ $TWO_BRIDGES -eq 1 ]
+  then
+    sudo ovs-ofctl -OOpenFlow12 add-flow $DBR2 arp,actions=FLOOD
+    retval=$?
+    check_retval $retval
+  fi
+  
+  c_print "Bold" "Adding port forward rule to $DBR (fwd direction): ip,in_port=pf0hpf,actions=output:p0" 1  
+  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=pf0hpf,actions=output:p0
   retval=$?
   check_retval $retval
 
-  c_print "Bold" "Adding IP forward rule $DBR: ip,in_port=pf0hpf,ip_dst=10.0.0.2,ip_src=10.0.0.1,actions=output:p0..."  1  
-  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=pf0hpf,ip_dst=10.0.0.2,ip_src=10.0.0.1,actions=output:p0
+  c_print "Bold" "Adding port forward rule to $DBR (rev direction): ip,in_port=p0,actions=output:pf0hpf"  1  
+  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p0,actions=output:pf0hpf
   retval=$?
   check_retval $retval
 
-  c_print "Bold" "Adding IP forward rule to $DBR: ip,in_port=p0,ip_dst=10.0.0.1,ip_src=10.0.0.2,actions=output:pf0hpf..."  1  
-  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p0,ip_dst=10.0.0.1,ip_src=10.0.0.2,actions=output:pf0hpf
-  retval=$?
-  check_retval $retval
+  if [ $TWO_BRIDGES -eq 1 ]
+  then
+    c_print "Bold" "Adding port forward rule to $DBR2 (fwd direction): ip,in_port=pf1hpf,actions=output:p1..."  1  
+    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=pf1hpf,actions=output:p1
+    retval=$?
+    check_retval $retval
 
-  c_print "Bold" "Adding IP forward rule $DBR2: ip,in_port=pf1hpf,ip_dst=10.10.10.2,ip_src=10.10.10.1,actions=output:p1..."  1  
-  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=pf1hpf,ip_dst=10.10.10.2,ip_src=10.10.10.1,actions=output:p1
-  retval=$?
-  check_retval $retval
+    c_print "Bold" "Adding port forward rule to $DBR2 (rev direction): ip,in_port=p1,actions=output:pf1hpf..."  1  
+    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=p1,actions=output:pf1hpf
+    retval=$?
+    check_retval $retval
+  else
+    c_print "Bold" "Adding port forward rule to $DBR (fwd direction): ip,in_port=pf1hpf,actions=output:p1" 1  
+    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=pf1hpf,actions=output:p1
+    retval=$?
+    check_retval $retval
 
-  c_print "Bold" "Adding IP forward rule to $DBR2: ip,in_port=p1,ip_dst=10.10.10.1,ip_src=10.10.10.2,actions=output:pf1hpf..."  1  
-  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=p1,ip_dst=10.10.10.1,ip_src=10.10.10.2,actions=output:pf1hpf
-  retval=$?
-  check_retval $retval
+    c_print "Bold" "Adding port forward rule to $DBR (rev direction): ip,in_port=p1,actions=output:pf1hpf"  1  
+    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p1,actions=output:pf1hpf
+    retval=$?
+    check_retval $retval
+  fi
+
+ 
 
 
 
@@ -309,10 +349,6 @@ else
   # sudo ovs-vsctl --no-wait add-port $DPDK_BR dpdk3 -- set Interface dpdk3 type=dpdk -- set Interface dpdk3 options:dpdk-devargs=0000:03:00.1,representor=[0,65535]
   # retval=$?
   # check_retval $retval
-
-
-  
-
 
 fi
 
