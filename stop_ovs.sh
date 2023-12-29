@@ -5,12 +5,26 @@
  
  
 function show_help () 
- { 
+{ 
  	c_print "Green" "This script stops Open vSwitch processes completely! Instead of a simple /etc/init.d/openvswitch-switch stop, this script systematically stop each individual subprocess and removes OvS bridges and datapath components."
  	c_print "Bold" "Example: sudo ./stop_ovs.sh "
  	#c_print "Bold" "\t-a <ARG1>: set ARG1 here (Default: ???)."
  	exit $1
- }
+}
+
+function check_ovs_run ()
+{
+	c_print "Bold" "Checking if OVS is running..."
+	sudo ps aux |grep ovs|grep -v grep | grep -v stop_ovs
+	retval=$?
+	if [ $retval -ne 0 ]
+	then
+		c_print "Yellow" "OVS is not running, nothing to do..."
+		c_print "None" "Exiting..."
+		exit 0
+	fi
+}
+
 
 ARG1=""
 
@@ -39,16 +53,8 @@ DBR="ovsbr1"
 DBR2="ovsbr2"
 DPDK_BR="ovs_dpdk_br0"
 
-
-c_print "Bold" "Checking if OVS is running..."
-sudo ps aux |grep ovs|grep -v grep | grep -v stop_ovs
-retval=$?
-if [ $retval -ne 0 ]
-then
-	c_print "Yellow" "OVS is not running, nothing to do..."
-	c_print "None" "Exiting..."
-	exit 0
-fi
+# check if there is any ovs running
+check_ovs_run
 
 # if [ -z $ARG1 ]
 #  then
@@ -96,8 +102,9 @@ sudo rm -rf /var/run/openvswitch
 sudo rm -rf /var/log/openvswitch
 
 
-c_print "Bold" "\n\nAfter all these, I find the following processes still running that might be related to OvS. Please, check!"
-ps aux |grep ovs|grep -v "grep --color=auto" |grep -v "stop_ovs.sh"|grep -v "grep ovs"|grep -v "nano"
+
+# check if there is any ovs running
+check_ovs_run
 
 
 echo -e "\n"
