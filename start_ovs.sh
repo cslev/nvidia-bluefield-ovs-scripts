@@ -65,7 +65,8 @@ LOG_OVS_DB=/var/log/openvswitch/cslev-ovsdb-server.log
 LOG_OVS_VSCTL=/var/log/openvswitch/cslev-ovs-vsctl.log
 LOG_OVS_VSWITCHD=/var/log/openvswitch/cslev-ovs-vswitchd.log
 
-
+PID_OVSDB=/var/run/openvswitch/ovsdb-server.pid
+PID_OVS_VSWITCHD=/var/run/openvswitch/ovs-vswitchd.pid
 
 DBR="ovsbr1"
 DBR2="ovsbr2"
@@ -116,8 +117,7 @@ sudo mkdir -p $(dirname $LOG_OVS_DB)
 
 
 c_print "Bold" "Starting ovsdb-server..." 1
-# sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --pidfile=/var/run/openvswitch/ovsdb-server.pid --log-file=/var/run/openvswitch/cslev-ovsdb-server.log --detach
-sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --log-file=$LOG_OVS_DB --detach
+sudo ovsdb-server --remote=punix:$DB_SOCK --remote=db:Open_vSwitch,Open_vSwitch,manager_options --pidfile=$PID_OVSDB --log-file=$LOG_OVS_DB --detach
 retval=$?
 check_retval $retval
 
@@ -153,8 +153,7 @@ then
   fi
 
   c_print "Bold" "Starting vswitchd..." 
-  # sudo ovs-vswitchd unix:$DB_SOCK --pidfile=/var/run/openvswitch/ovs-vswitchd.pid  --log-file=$LOG_OVS_VSWITCHD --detach
-  sudo ovs-vswitchd unix:$DB_SOCK --log-file=$LOG_OVS_VSWITCHD --detach
+  sudo ovs-vswitchd unix:$DB_SOCK --pidfile=$PID_OVS_VSWITCHD --log-file=$LOG_OVS_VSWITCHD --detach
   retval=$?  
   check_retval $retval
 
