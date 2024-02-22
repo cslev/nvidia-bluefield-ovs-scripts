@@ -15,7 +15,7 @@ function show_help ()
 function check_ovs_run ()
 {
 	c_print "Bold" "Checking if OVS is running..."
-	sudo ps aux |grep ovs|grep -v grep | grep -v stop_ovs
+	sudo ps aux |grep ovs|grep -v grep | grep -v stop_ovs 2>&1 > /dev/null
 	retval=$?
 	if [ $retval -ne 0 ]
 	then
