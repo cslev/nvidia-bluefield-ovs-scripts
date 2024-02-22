@@ -1,18 +1,34 @@
 #!/bin/bash
  
- ROOT="$(dirname "$0")"
- source $ROOT/sources/extra.sh
+ROOT="$(dirname "$0")"
+source $ROOT/sources/extra.sh
  
- 
-function show_help () 
- { 
+
+function show_help ()
+{ 
  	c_print "Green" "This script starts Open vSwitch processes manually! Instead of a simple /etc/init.d/openvswitch-switch start, this script systematically start each individual subprocess and creates OvS bridges and datapath components."
  	c_print "Bold" "Example: sudo ./start_ovs.sh "
  	c_print "Bold" "\t-d: with DPDK (Default: NO)."
   c_print "Bold" "\t-o: enable HW OFFLOAD (Default: disable)."
   c_print "Bold" "\t-t: use two bridges (ovsbr1 + ovsbr2) (Default: False (ovsbr1 only))."
  	exit $1
- }
+}
+
+function check_ovs_run ()
+{
+  c_print "Bold" "Checking if OVS is running..." 1
+  sudo ps aux |grep ovs|grep -v grep | grep -v start_ovs 2>&1 > /dev/null
+  retval=$?
+  if [ $retval -ne 0 ]
+  then
+          c_print "BGreen" "[NOT RUNNING]"
+          c_print "None" "Initiating..."
+  else
+          c_print "BYellow" "[RUNNING]"
+          exit 0
+  fi
+}
+
 
 DPDK=0
 HW_OFFLOAD=0
@@ -38,6 +54,8 @@ while getopts "h?dot" opt
  		;;
  	esac
  done
+
+check_ovs_run
 
 c_print "None" "+========= YOUR SETTINGS ===========+"
 if [ $HW_OFFLOAD -eq 0 ]
