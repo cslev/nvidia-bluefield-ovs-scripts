@@ -121,8 +121,12 @@ fi
 
 if [ $HAIRPIN -eq 1 ]
 then
-  c_print "BYellow" "Hairpin mode enabled, a single bridge will be used!"
-  TWO_BRIDGES=0
+  c_print "BYellow" "Hairpin mode enabled"
+  if [ $TWO_BRIDGES -eq 1 ]
+  then
+    c_print "BYellow" "Each OvS bridge will send back traffic on in_port"
+  fi
+  
 fi
 
 
@@ -285,15 +289,29 @@ then
     fi
   #HAIRPIN
   else 
-    c_print "Bold" "Adding hairpin rule to $DBR (p0->p1 direction): ip,in_port=p0,actions=output:p1" 1  
-    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p0,actions=output:p1
-    retval=$?
-    check_retval $retval
+    if [ $TWO_BRIDGES -eq 0 ]
+    then
+      c_print "Bold" "Adding hairpin rule to $DBR (p0->p1 direction): ip,in_port=p0,actions=output:p1" 1  
+      sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p0,actions=output:p1
+      retval=$?
+      check_retval $retval
 
-    c_print "Bold" "Adding hairpin rule to $DBR (p1->p0 direction): ip,in_port=p1,actions=output:p0" 1  
-    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p1,actions=output:p0
-    retval=$?
-    check_retval $retval
+      c_print "Bold" "Adding hairpin rule to $DBR (p1->p0 direction): ip,in_port=p1,actions=output:p0" 1  
+      sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p1,actions=output:p0
+      retval=$?
+      check_retval $retval
+    else
+      c_print "Bold" "Adding hairpin rule to $DBR (p0->p0 direction): ip,in_port=p0,actions=output:IN_PORT" 1  
+      sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p0,actions=output:IN_PORT
+      retval=$?
+      check_retval $retval
+
+      c_print "Bold" "Adding hairpin rule to $DBR2 (p1->p1 direction): ip,in_port=p1,actions=output:IN_PORT" 1  
+      sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=p1,actions=output:IN_PORT
+      retval=$?
+      check_retval $retval
+    
+    fi
 
     #### no check for TWO_BRIDGES as hairpin mode can only have one bridge
   fi
