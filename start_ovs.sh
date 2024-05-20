@@ -11,6 +11,7 @@ function show_help ()
  	c_print "Bold" "\t-d: with DPDK (Default: NO)."
   c_print "Bold" "\t-o: enable HW OFFLOAD (Default: disable)."
   c_print "Bold" "\t-t: use two bridges (ovsbr1 + ovsbr2) (Default: False (ovsbr1 only))."
+  c_print "Bold" "\t-r: reverse traffic - receive traffic on p0 and hair-pin it to p1 (p0<->p1) (Default: False (forward traffic up to the host (p0<->pf0hpf,p1<->pf1hpf)))."
  	exit $1
 }
 
@@ -33,8 +34,9 @@ function check_ovs_run ()
 DPDK=0
 HW_OFFLOAD=0
 TWO_BRIDGES=0
+HAIRPIN=0
 
-while getopts "h?dot" opt
+while getopts "h?dotr" opt
  do
  	case "$opt" in
  	h|\?)
@@ -49,7 +51,11 @@ while getopts "h?dot" opt
   t)
     TWO_BRIDGES=1
     ;;
- 	*)
+  r)
+    HAIRPIN=1
+    TWO_BRIDGES=0
+    ;;
+  *)
  		show_help
  		;;
  	esac
@@ -113,6 +119,11 @@ else
   exit
 fi
 
+if [ $HAIRPIN -eq 1 ]
+then
+  c_print "BYellow" "Hairpin mode enabled, a single bridge will be used!"
+  TWO_BRIDGES=0
+fi
 
 
 
@@ -220,54 +231,71 @@ then
 
   c_print "Bold" "Deleting NORMAL flow rules (if there were any) from the bridges..." 1
   sudo ovs-ofctl del-flows $DBR
-
   if [ $TWO_BRIDGES -eq 1 ]
   then
     sudo ovs-ofctl del-flows $DBR2  
-    retval=$?
-    check_retval $retval
   fi
+  retval=$?
+  check_retval $retval
 
   c_print "Bold" "Adding ARP flood flow rules to the bridges..." 
   sudo ovs-ofctl -OOpenFlow12 add-flow $DBR arp,actions=FLOOD
   if [ $TWO_BRIDGES -eq 1 ]
   then
     sudo ovs-ofctl -OOpenFlow12 add-flow $DBR2 arp,actions=FLOOD
-    retval=$?
-    check_retval $retval
   fi
-  
-  c_print "Bold" "Adding port forward rule to $DBR (fwd direction): ip,in_port=pf0hpf,actions=output:p0" 1  
-  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=pf0hpf,actions=output:p0
   retval=$?
   check_retval $retval
 
-  c_print "Bold" "Adding port forward rule to $DBR (rev direction): ip,in_port=p0,actions=output:pf0hpf"  1  
-  sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p0,actions=output:pf0hpf
-  retval=$?
-  check_retval $retval
 
-  if [ $TWO_BRIDGES -eq 1 ]
+  # FORWARD TO HOST
+  if [ $HAIRPIN -eq 0 ]
   then
-    c_print "Bold" "Adding port forward rule to $DBR2 (fwd direction): ip,in_port=pf1hpf,actions=output:p1..."  1  
-    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=pf1hpf,actions=output:p1
+    c_print "Bold" "Adding port forward rule to $DBR (fwd direction): ip,in_port=pf0hpf,actions=output:p0" 1  
+    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=pf0hpf,actions=output:p0
     retval=$?
     check_retval $retval
 
-    c_print "Bold" "Adding port forward rule to $DBR2 (rev direction): ip,in_port=p1,actions=output:pf1hpf..."  1  
-    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=p1,actions=output:pf1hpf
-    retval=$?
-    check_retval $retval
-  else
-    c_print "Bold" "Adding port forward rule to $DBR (fwd direction): ip,in_port=pf1hpf,actions=output:p1" 1  
-    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=pf1hpf,actions=output:p1
+    c_print "Bold" "Adding port forward rule to $DBR (rev direction): ip,in_port=p0,actions=output:pf0hpf"  1  
+    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p0,actions=output:pf0hpf
     retval=$?
     check_retval $retval
 
-    c_print "Bold" "Adding port forward rule to $DBR (rev direction): ip,in_port=p1,actions=output:pf1hpf"  1  
-    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p1,actions=output:pf1hpf
+    if [ $TWO_BRIDGES -eq 1 ]
+    then
+      c_print "Bold" "Adding port forward rule to $DBR2 (fwd direction): ip,in_port=pf1hpf,actions=output:p1..."  1  
+      sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=pf1hpf,actions=output:p1
+      retval=$?
+      check_retval $retval
+
+      c_print "Bold" "Adding port forward rule to $DBR2 (rev direction): ip,in_port=p1,actions=output:pf1hpf..."  1  
+      sudo ovs-ofctl -OOpenFlow13 add-flow $DBR2 ip,in_port=p1,actions=output:pf1hpf
+      retval=$?
+      check_retval $retval
+    else
+      c_print "Bold" "Adding port forward rule to $DBR (fwd direction): ip,in_port=pf1hpf,actions=output:p1" 1  
+      sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=pf1hpf,actions=output:p1
+      retval=$?
+      check_retval $retval
+
+      c_print "Bold" "Adding port forward rule to $DBR (rev direction): ip,in_port=p1,actions=output:pf1hpf"  1  
+      sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p1,actions=output:pf1hpf
+      retval=$?
+      check_retval $retval
+    fi
+  #HAIRPIN
+  else 
+    c_print "Bold" "Adding hairpin rule to $DBR (p0->p1 direction): ip,in_port=p0,actions=output:p1" 1  
+    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p0,actions=output:p1
     retval=$?
     check_retval $retval
+
+    c_print "Bold" "Adding hairpin rule to $DBR (p1->p0 direction): ip,in_port=p1,actions=output:p0" 1  
+    sudo ovs-ofctl -OOpenFlow13 add-flow $DBR ip,in_port=p1,actions=output:p0
+    retval=$?
+    check_retval $retval
+
+    #### no check for TWO_BRIDGES as hairpin mode can only have one bridge
   fi
 
  
