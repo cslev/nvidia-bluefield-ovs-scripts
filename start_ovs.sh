@@ -53,7 +53,6 @@ while getopts "h?dotr" opt
     ;;
   r)
     HAIRPIN=1
-    TWO_BRIDGES=0
     ;;
   *)
  		show_help
